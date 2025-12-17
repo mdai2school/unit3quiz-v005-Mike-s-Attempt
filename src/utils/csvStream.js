@@ -58,7 +58,10 @@ function toNum(x) {
   return Number.isFinite(n) ? n : 0;
 }
 
-export async function aggregateMonthlySalesFromStream(readableStream) {
+export async function aggregateMonthlySalesFromStream(
+  readableStream,
+  { onProgress, progressEvery = 10000 } = {},
+) {
   // Aggregates ALL metrics at once so UI can switch without re-parsing.
   const totalsByMonth = new Map(); // monthKey => { retailSales, retailTransfers, warehouseSales }
   const byTypeMonth = new Map(); // type => Map(monthKey => { ... })
@@ -123,7 +126,13 @@ export async function aggregateMonthlySalesFromStream(readableStream) {
     typeBucket.retailSales += retailSales;
     typeBucket.retailTransfers += retailTransfers;
     typeBucket.warehouseSales += warehouseSales;
+
+    if (onProgress && lineNum % progressEvery === 0) {
+      onProgress({ rowsParsed: Math.max(0, lineNum - 1) });
+    }
   });
+
+  if (onProgress) onProgress({ rowsParsed: Math.max(0, lineNum - 1) });
 
   const months = Array.from(totalsByMonth.keys()).sort();
   const typeList = Array.from(types).sort((a, b) => a.localeCompare(b));

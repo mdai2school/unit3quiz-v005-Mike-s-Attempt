@@ -2,6 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import LineChart from './components/LineChart.jsx';
 import { aggregateMonthlySalesFromStream } from './utils/csvStream.js';
+import {
+  getUserVote,
+  isFirebaseConfigured,
+  saveUserVote,
+  signInWithEmailPassword,
+  signUpWithEmailPassword,
+  signOutUser,
+  subscribeToAuth,
+} from './firebase.js';
 
 const DATASET_URL = '/drug_overdose.csv';
 
@@ -9,9 +18,17 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [datasetName, setDatasetName] = useState('');
+  const [parseProgress, setParseProgress] = useState({ rowsParsed: 0 });
 
   const [agg, setAgg] = useState(null);
   const [selectedDrug, setSelectedDrug] = useState('All');
+
+  const [user, setUser] = useState(null);
+  const [vote, setVote] = useState(''); // "yes" | "no" | ""
+  const [voteStatus, setVoteStatus] = useState({ kind: 'idle', message: '' });
+
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
 
   // Auto-load from /public (copied into dist on build).
   useEffect(() => {
@@ -20,9 +37,15 @@ function App() {
       try {
         setLoading(true);
         setLoadError('');
+        setParseProgress({ rowsParsed: 0 });
         const res = await fetch(DATASET_URL);
         if (!res.ok || !res.body) throw new Error(`Failed to load dataset at ${DATASET_URL}`);
-        const parsed = await aggregateMonthlySalesFromStream(res.body);
+        const parsed = await aggregateMonthlySalesFromStream(res.body, {
+          progressEvery: 20000,
+          onProgress: (p) => {
+            if (!cancelled) setParseProgress(p);
+          },
+        });
         if (cancelled) return;
         setDatasetName(DATASET_URL);
         setAgg(parsed);
@@ -36,6 +59,28 @@ function App() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    const unsub = subscribeToAuth(async (u) => {
+      setUser(u ?? null);
+      setVoteStatus({ kind: 'idle', message: '' });
+      if (!u) {
+        setVote('');
+        return;
+      }
+      try {
+        setVoteStatus({ kind: 'pending', message: 'Loading your saved vote…' });
+        const existing = await getUserVote(u.uid);
+        const v = existing?.vote;
+        setVote(v === 'yes' || v === 'no' ? v : '');
+        setVoteStatus({ kind: 'idle', message: '' });
+      } catch (e) {
+        setVoteStatus({ kind: 'error', message: e?.message || 'Failed to load vote.' });
+      }
+    });
+    return () => unsub?.();
   }, []);
 
   const drugs = useMemo(() => {
@@ -103,7 +148,13 @@ function App() {
                 {datasetName ? `Loaded: ${datasetName}` : 'Loading dataset…'}
               </div>
             </div>
-            <div className="pill">{loading ? 'Loading…' : agg ? 'Ready' : 'Error'}</div>
+            <div className="pill">
+              {loading
+                ? `Loading… (${parseProgress.rowsParsed.toLocaleString()} rows)`
+                : agg
+                  ? 'Ready'
+                  : 'Error'}
+            </div>
           </div>
 
           {loadError && <div className="errorBox">Error: {loadError}</div>}
@@ -154,23 +205,167 @@ function App() {
           <div className="cardHeader">
             <div>
               <div className="cardTitle">Statement of Intent</div>
-              <div className="cardSubtle">What this data shows + my stance</div>
+              <div className="cardSubtle">Simple vote (saved per signed-in user)</div>
             </div>
+            <div className="pill">{isFirebaseConfigured ? 'Login enabled' : 'Setup needed'}</div>
           </div>
           <div className="noteText">
             This webpage graphs recent monthly totals from the provided dataset and lets you segment
             the results by “Drug”. Looking at month-to-month changes helps highlight trends,
             seasonality, and unusual spikes that can signal increased risk and harm.
-            <br />
-            <br />
+
             <div className="stanceBlock">
-              <div className="stanceLabel">My stance</div>
-              <div className="stanceText">
-                Communities should treat sustained increases in alcohol sales as a signal to invest
-                more in prevention, education, and accessible support services—because higher
-                consumption correlates with higher risk for harm even if sales alone don’t prove
-                causation.
+              <div className="stanceLabel">Vote</div>
+              <div className="stanceText">Should we invest more in drug/alcohol harm reduction?</div>
+
+              {!isFirebaseConfigured && (
+                <div className="smallNote">
+                  Firebase isn’t configured yet. Paste your Firebase Web App config into
+                  <code> src/firebaseConfig.js</code>, then refresh.
+                </div>
+              )}
+
+              <div className="authRow">
+                {user ? (
+                  <>
+                    <div className="userChip">
+                      Signed in as <b>{user.displayName || user.email}</b>
+                    </div>
+                    <button className="secondaryBtn" type="button" onClick={() => signOutUser()}>
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <div className="authBox">
+                    <div className="emailAuth">
+                      <input
+                        className="input"
+                        placeholder="Email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        type="email"
+                        autoComplete="email"
+                      />
+                      <input
+                        className="input"
+                        placeholder="Password"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        type="password"
+                        autoComplete="current-password"
+                      />
+                      <div className="emailAuthActions">
+                        <button
+                          className="primaryBtn"
+                          type="button"
+                          disabled={!authEmail || !authPassword}
+                          onClick={async () => {
+                            try {
+                              setVoteStatus({ kind: 'pending', message: 'Signing in…' });
+                              await signInWithEmailPassword(authEmail, authPassword);
+                              setVoteStatus({ kind: 'idle', message: '' });
+                            } catch (e) {
+                              setVoteStatus({
+                                kind: 'error',
+                                message: e?.message || 'Sign-in failed.',
+                              });
+                            }
+                          }}
+                        >
+                          Sign in
+                        </button>
+                        <button
+                          className="secondaryBtn"
+                          type="button"
+                          disabled={!authEmail || !authPassword}
+                          onClick={async () => {
+                            try {
+                              setVoteStatus({ kind: 'pending', message: 'Creating account…' });
+                              await signUpWithEmailPassword(authEmail, authPassword);
+                              setVoteStatus({
+                                kind: 'ok',
+                                message: 'Account created. You are signed in.',
+                              });
+                            } catch (e) {
+                              setVoteStatus({
+                                kind: 'error',
+                                message: e?.message || 'Sign-up failed.',
+                              });
+                            }
+                          }}
+                        >
+                          Sign up
+                        </button>
+                      </div>
+                      <div className="smallNote">
+                        Make sure Firebase Console → <b>Authentication</b> → <b>Sign-in method</b> has
+                        <b> Email/Password</b> enabled.
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              <div className="voteRow">
+                <label className="radio">
+                  <input
+                    type="radio"
+                    name="vote"
+                    value="yes"
+                    checked={vote === 'yes'}
+                    onChange={() => setVote('yes')}
+                    disabled={!user}
+                  />
+                  <span>Yes</span>
+                </label>
+                <label className="radio">
+                  <input
+                    type="radio"
+                    name="vote"
+                    value="no"
+                    checked={vote === 'no'}
+                    onChange={() => setVote('no')}
+                    disabled={!user}
+                  />
+                  <span>No</span>
+                </label>
+
+                <button
+                  className="primaryBtn"
+                  type="button"
+                  disabled={!user || (vote !== 'yes' && vote !== 'no')}
+                  onClick={async () => {
+                    try {
+                      setVoteStatus({ kind: 'pending', message: 'Saving your vote…' });
+                      await saveUserVote({
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName,
+                        vote,
+                      });
+                      setVoteStatus({ kind: 'ok', message: 'Saved! (Your vote is tied to your login.)' });
+                    } catch (e) {
+                      setVoteStatus({ kind: 'error', message: e?.message || 'Save failed.' });
+                    }
+                  }}
+                >
+                  Save my vote
+                </button>
+              </div>
+
+              {voteStatus.kind !== 'idle' && (
+                <div
+                  className={
+                    voteStatus.kind === 'ok'
+                      ? 'status ok'
+                      : voteStatus.kind === 'error'
+                        ? 'status error'
+                        : 'status'
+                  }
+                >
+                  {voteStatus.message}
+                </div>
+              )}
             </div>
           </div>
         </section>

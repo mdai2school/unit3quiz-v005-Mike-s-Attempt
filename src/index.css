@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #0b1020;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,15 +24,19 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
   min-width: 320px;
   min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgba(109, 172, 255, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 85% 10%, rgba(255, 119, 170, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%),
+    #0b1020;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2.4em;
+  line-height: 1.2;
 }
 
 button {

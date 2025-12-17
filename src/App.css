@@ -1,42 +1,282 @@
-#root {
-  max-width: 1280px;
+.appShell {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 28px 18px 64px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.topBar {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.title {
+  margin: 8px 0 6px;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 64ch;
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fileInput {
+  width: 280px;
+  max-width: 44vw;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.span2 {
+  grid-column: span 2;
 }
 
 .card {
-  padding: 2em;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 14px;
+  backdrop-filter: blur(10px);
 }
 
-.read-the-docs {
-  color: #888;
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cardSubtle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 2px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.hint {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.hintTitle {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.hintText {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+}
+
+.errorBox {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 80, 80, 0.35);
+  background: rgba(255, 80, 80, 0.1);
+  color: rgba(255, 220, 220, 0.95);
+  font-size: 13px;
+}
+
+.statsRow {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.controlsCard .controls {
+  grid-template-columns: 1fr;
+}
+
+.controls.singleRow {
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.stat.inline {
+  margin-top: 18px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 6px;
+}
+
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.92);
+  outline: none;
+}
+
+.checkboxRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.checkboxRow.compact {
+  margin: 0;
+}
+
+.statementBottom {
+  margin-top: 6px;
+}
+
+.chartCard {
+  padding: 14px;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.chartGrid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.chartTick {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+
+.chartAxis {
+  fill: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
+
+.chartLine {
+  fill: none;
+  stroke: rgba(120, 165, 255, 0.95);
+  stroke-width: 3;
+}
+
+.chartDot {
+  fill: rgba(120, 165, 255, 1);
+  stroke: rgba(0, 0, 0, 0.4);
+  stroke-width: 1;
+}
+
+.noteText {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.55;
+}
+
+.stanceBlock {
+  margin-top: 10px;
+  padding: 14px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.stanceLabel {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 6px;
+}
+
+.stanceText {
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .span2 {
+    grid-column: auto;
+  }
+  .controls {
+    grid-template-columns: 1fr;
+  }
+  .controls.singleRow {
+    grid-template-columns: 1fr;
+  }
+  .topBar {
+    flex-direction: column;
+  }
 }
